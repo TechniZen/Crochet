@@ -171,6 +171,11 @@
     <button onclick="saveProject()">💾 Enregistrer</button>
     <button onclick="newProject()">🆕 Nouveau</button>
     <button class="delete-btn" onclick="deleteProject()">🗑 Supprimer</button>
+    <!-- Boutons dans ton HTML -->
+    <button id="btn-export">⬇ Exporter</button>
+    <button><label for="import-file" style="cursor: pointer;">⬆ Importer</label></button>
+    <input type="file" id="import-file" accept=".json" style="display: none;" />
+
   </div>
 
   <div class="section-container">
@@ -212,176 +217,236 @@
     <button onclick="resetAll()" style="background-color:#f8a5c2;">🧹 Effacer tout</button>
   </div>
 
-  <script>
-    let counters = { mailles: 0, tours: 0 };
-    let elapsedSeconds = 0;
-    let chronoInterval;
-    let isRunning = false;
+<script>
+  const STORAGE_PREFIX = 'project_';
+  let counters = { mailles: 0, tours: 0 };
+  let elapsedSeconds = 0;
+  let chronoInterval;
+  let isRunning = false;
 
-    function updateUI() {
-      document.getElementById('mailles').textContent = counters.mailles;
-      document.getElementById('tours').textContent = counters.tours;
-      updateChronoDisplay();
-      document.getElementById('preview').src = localStorage.getItem('currentImage') || '';
+  function updateUI() {
+    document.getElementById('mailles').textContent = counters.mailles;
+    document.getElementById('tours').textContent = counters.tours;
+    updateChronoDisplay();
+    document.getElementById('preview').src = localStorage.getItem('currentImage') || '';
+  }
+
+  function updateCounter(type, value) {
+    counters[type] += value;
+    if (counters[type] < 0) counters[type] = 0;
+    document.getElementById(type).textContent = counters[type];
+  }
+
+  function resetCounter(type) {
+    counters[type] = 0;
+    document.getElementById(type).textContent = 0;
+  }
+
+  function updateChronoDisplay() {
+    const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+    const seconds = String(elapsedSeconds % 60).padStart(2, '0');
+    document.getElementById('chrono').textContent = `${minutes}:${seconds}`;
+  }
+
+  function startChrono() {
+    if (!isRunning) {
+      chronoInterval = setInterval(() => {
+        elapsedSeconds++;
+        updateChronoDisplay();
+      }, 1000);
+      isRunning = true;
     }
+  }
 
-    function updateCounter(type, value) {
-      counters[type] += value;
-      if (counters[type] < 0) counters[type] = 0;
-      document.getElementById(type).textContent = counters[type];
+  function pauseChrono() {
+    clearInterval(chronoInterval);
+    isRunning = false;
+  }
+
+  function resetChrono() {
+    clearInterval(chronoInterval);
+    elapsedSeconds = 0;
+    isRunning = false;
+    updateChronoDisplay();
+  }
+
+  function importImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('preview').src = e.target.result;
+        localStorage.setItem('currentImage', e.target.result);
+      };
+      reader.readAsDataURL(file);
     }
+  }
 
-    function resetCounter(type) {
-      counters[type] = 0;
-      document.getElementById(type).textContent = 0;
-    }
-
-    function updateChronoDisplay() {
-      const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
-      const seconds = String(elapsedSeconds % 60).padStart(2, '0');
-      document.getElementById('chrono').textContent = `${minutes}:${seconds}`;
-    }
-
-    function startChrono() {
-      if (!isRunning) {
-        chronoInterval = setInterval(() => {
-          elapsedSeconds++;
-          updateChronoDisplay();
-        }, 1000);
-        isRunning = true;
-      }
-    }
-
-    function pauseChrono() {
-      clearInterval(chronoInterval);
-      isRunning = false;
-    }
-
-    function resetChrono() {
-      clearInterval(chronoInterval);
+  function resetAll() {
+    if (confirm("Tout effacer ?")) {
+      counters = { mailles: 0, tours: 0 };
       elapsedSeconds = 0;
       isRunning = false;
-      updateChronoDisplay();
-    }
-
-    function importImage(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          document.getElementById('preview').src = e.target.result;
-          localStorage.setItem('currentImage', e.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function resetAll() {
-      if (confirm("Tout effacer ?")) {
-        counters = { mailles: 0, tours: 0 };
-        elapsedSeconds = 0;
-        isRunning = false;
-        clearInterval(chronoInterval);
-        document.getElementById('preview').src = '';
-        localStorage.removeItem('currentImage');
-        updateUI();
-      }
-    }
-
-    function saveProject() {
-      const nameInput = document.getElementById('project-name');
-      let name = nameInput.value.trim();
-
-      if (!name) {
-        alert("Entrez un nom de projet avant d'enregistrer.");
-        nameInput.focus();
-        return;
-      }
-
-      // Sauvegarde les données actuelles
-      const data = {
-        mailles: counters.mailles,
-        tours: counters.tours,
-        chrono: elapsedSeconds,
-        image: localStorage.getItem('currentImage') || ''
-      };
-      localStorage.setItem('project_' + name, JSON.stringify(data));
-      refreshProjectList();
-      document.getElementById('project-select').value = name;
-      alert(`Projet "${name}" enregistré.`);
-    }
-
-    function loadProject() {
-      const name = document.getElementById('project-select').value;
-      if (!name) return;
-      const data = JSON.parse(localStorage.getItem('project_' + name));
-      if (!data) {
-        alert("Projet introuvable.");
-        return;
-      }
-      counters.mailles = data.mailles;
-      counters.tours = data.tours;
-      elapsedSeconds = data.chrono;
-      localStorage.setItem('currentImage', data.image || '');
+      clearInterval(chronoInterval);
+      document.getElementById('preview').src = '';
+      localStorage.removeItem('currentImage');
       updateUI();
-      document.getElementById('project-name').value = name;
+    }
+  }
+
+  function saveProject() {
+    const nameInput = document.getElementById('project-name');
+    let name = nameInput.value.trim();
+    if (!name) {
+      alert("Entrez un nom de projet avant d'enregistrer.");
+      nameInput.focus();
+      return;
     }
 
-    function onProjectSelectChange() {
-      loadProject();
-    }
-
-    function deleteProject() {
-      const name = document.getElementById('project-select').value;
-      if (!name) {
-        alert("Sélectionnez un projet à supprimer.");
-        return;
-      }
-      if (confirm(`Supprimer le projet "${name}" ?`)) {
-        localStorage.removeItem('project_' + name);
-        refreshProjectList();
-        document.getElementById('project-name').value = '';
-        document.getElementById('project-select').value = '';
-        resetAll();
-        alert("Projet supprimé.");
-      }
-    }
-
-    function newProject() {
-      // Avant tout, sauvegarder le projet actuel si un nom est renseigné
-      const nameInput = document.getElementById('project-name');
-      const currentName = nameInput.value.trim();
-
-      if (currentName) {
-        if(confirm(`Voulez-vous enregistrer le projet actuel "${currentName}" avant de créer un nouveau ?`)) {
-          saveProject();
-        }
-      }
-
-      // Reset complet
-      resetAll();
-      nameInput.value = '';
-      document.getElementById('project-select').value = '';
-    }
-
-    function refreshProjectList() {
-      const select = document.getElementById('project-select');
-      select.innerHTML = '<option value="">-- Sélectionner un projet --</option>';
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('project_')) {
-          const name = key.substring(8);
-          const option = document.createElement('option');
-          option.value = name;
-          option.textContent = name;
-          select.appendChild(option);
-        }
-      });
-    }
-
-    // Initialisation
+    const data = {
+      mailles: counters.mailles,
+      tours: counters.tours,
+      chrono: elapsedSeconds,
+      image: localStorage.getItem('currentImage') || ''
+    };
+    localStorage.setItem(STORAGE_PREFIX + name, JSON.stringify(data));
     refreshProjectList();
+    document.getElementById('project-select').value = name;
+    alert(`Projet "${name}" enregistré.`);
+  }
+
+  function loadProject() {
+    const name = document.getElementById('project-select').value;
+    if (!name) return;
+
+    const data = JSON.parse(localStorage.getItem(STORAGE_PREFIX + name));
+    if (!data) {
+      alert("Projet introuvable.");
+      return;
+    }
+
+    counters.mailles = data.mailles;
+    counters.tours = data.tours;
+    elapsedSeconds = data.chrono || 0;
+    localStorage.setItem('currentImage', data.image || '');
     updateUI();
-  </script>
+    document.getElementById('project-name').value = name;
+  }
+
+  function deleteProject() {
+    const name = document.getElementById('project-select').value;
+    if (!name) {
+      alert("Sélectionnez un projet à supprimer.");
+      return;
+    }
+
+    if (confirm(`Supprimer le projet "${name}" ?`)) {
+      localStorage.removeItem(STORAGE_PREFIX + name);
+      refreshProjectList();
+      document.getElementById('project-name').value = '';
+      document.getElementById('project-select').value = '';
+      resetAll();
+      alert("Projet supprimé.");
+    }
+  }
+
+  function newProject() {
+    const nameInput = document.getElementById('project-name');
+    const currentName = nameInput.value.trim();
+
+    if (currentName) {
+      if (confirm(`Voulez-vous enregistrer le projet actuel "${currentName}" avant de créer un nouveau ?`)) {
+        saveProject();
+      }
+    }
+
+    resetAll();
+    nameInput.value = '';
+    document.getElementById('project-select').value = '';
+  }
+
+  function refreshProjectList() {
+    const select = document.getElementById('project-select');
+    select.innerHTML = '<option value="">-- Sélectionner un projet --</option>';
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(STORAGE_PREFIX)) {
+        const name = key.substring(STORAGE_PREFIX.length);
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      }
+    });
+  }
+
+  function getCurrentProjectName() {
+    return document.getElementById('project-select').value;
+  }
+
+  // Exporter
+  document.getElementById('btn-export').addEventListener('click', () => {
+    const name = getCurrentProjectName();
+    if (!name) return alert("Aucun projet sélectionné à exporter.");
+
+    const data = localStorage.getItem(STORAGE_PREFIX + name);
+    if (!data) return alert("Projet introuvable dans le stockage.");
+
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Importer
+  document.getElementById('import-file').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (
+          typeof data.mailles !== 'number' ||
+          typeof data.tours !== 'number' ||
+          typeof data.chrono !== 'number'
+        ) {
+          alert("Fichier JSON invalide.");
+          return;
+        }
+
+        let baseName = file.name.replace(/\.json$/, '');
+        let name = baseName;
+        let idx = 1;
+
+        while (localStorage.getItem(STORAGE_PREFIX + name)) {
+          name = baseName + '_' + idx++;
+        }
+
+        localStorage.setItem(STORAGE_PREFIX + name, JSON.stringify(data));
+        alert(`Projet importé sous le nom "${name}".`);
+        refreshProjectList();
+
+        // Charger automatiquement le projet importé
+        document.getElementById('project-select').value = name;
+        document.getElementById('project-name').value = name;
+        loadProject();
+      } catch (error) {
+        alert("Erreur de lecture du fichier JSON.");
+      }
+    };
+
+    reader.readAsText(file);
+  });
+
+  // Initialisation
+  refreshProjectList();
+  updateUI();
+</script>
+
 
 </body>
 </html>
