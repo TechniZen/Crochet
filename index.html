@@ -94,6 +94,13 @@
       border-radius: 10px;
       border: 2px solid #f8a5c2;
     }
+
+    .image-section-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
   </style>
 </head>
 <body>
@@ -126,12 +133,15 @@
     </div>
   </div>
 
-  <div class="section">
-    <h2>Importer une image</h2>
-    <label for="file-upload" class="custom-file-upload">📸 Choisir une image</label>
-    <input id="file-upload" type="file" accept="image/*" onchange="importImage(event)">
-    <img id="preview" class="imported-image" src="" alt="">
+  <div class="image-section-wrapper">
+    <div class="section">
+        <h2>Importer une image</h2>
+        <label for="file-upload" class="custom-file-upload">📸 Choisir une image</label>
+        <input id="file-upload" type="file" accept="image/*" onchange="importImage(event)">
+        <img id="preview" class="imported-image" src="" alt="">
+    </div>
   </div>
+
 
   <script>
     let counters = { mailles: 0, tours: 0 };
