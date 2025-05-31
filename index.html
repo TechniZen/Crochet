@@ -4,28 +4,84 @@
   <meta charset="UTF-8">
   <title>Compteur Crochet</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
+    body {
       font-family: 'Comic Sans MS', cursive, sans-serif;
       background-color: #ffeef8;
       color: #d63384;
       text-align: center;
-      height: 100vh;
-      
+      margin: 0;
+      padding: 20px;
     }
 
     h1 {
-      margin: 10px 0;
       color: #e60073;
+      margin-bottom: 10px;
+    }
+
+    .texte-arc-en-ciel {
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: linear-gradient(270deg, #ff0000, #ff7300, #ffeb00, #47ff00, #00ffee, #2b65ff, #8000ff, #ff0000);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: defilementCouleur 5s linear infinite;
+    }
+
+    @keyframes defilementCouleur {
+      0% {
+        background-position: 0% 50%;
+      }
+      100% {
+        background-position: 100% 50%;
+      }
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .controls select,
+    .controls input,
+    .controls button {
+      padding: 8px 14px;
+      font-size: 14px;
+      border-radius: 10px;
+      border: 2px solid #f8a5c2;
+      background-color: #fff0f5;
+      color: #c2185b;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      transition: all 0.2s;
+    }
+
+    .controls button {
+      background-color: #ffb6c1;
+      color: white;
+      border: none;
+    }
+
+    .controls button:hover {
+      background-color: #ff69b4;
+    }
+
+    .delete-btn {
+      background-color: #ff4d6d !important;
+    }
+
+    .delete-btn:hover {
+      background-color: #e60033 !important;
     }
 
     .section-container {
       display: flex;
       justify-content: center;
-      gap: 15px;
       flex-wrap: wrap;
-      
+      gap: 15px;
+      margin-bottom: 20px;
     }
 
     .section {
@@ -98,37 +154,23 @@
     }
 
     .footer-button {
-      margin-top: 10px;
-    }
-
-
-
-
-    .texte-arc-en-ciel {
-      font-size: 3rem;
-      font-weight: bold;
-      background: linear-gradient(270deg, #ff0000, #ff7300, #ffeb00, #47ff00, #00ffee, #2b65ff, #8000ff, #ff0000);
-      background-size: 200% 200%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: defilementCouleur 5s linear infinite;
-    }
-
-    @keyframes defilementCouleur {
-      0% {
-        background-position: 0% 50%;
-      }
-      100% {
-        background-position: 100% 50%;
-      }
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
   <h1>🎀 Compteur Crochet 🎀</h1>
-  <div class="texte-arc-en-ciel">
-    <h3 style="color: #c2185b;">de Marjijou <3</h3>
+  <div class="texte-arc-en-ciel"><h3>de Marjijou <3</h3></div>
+
+  <div class="controls">
+    <select id="project-select" onchange="loadProject()">
+      <option value="">-- Sélectionner un projet --</option>
+    </select>
+    <input type="text" id="project-name" placeholder="Nom du projet" />
+    <button onclick="saveProject()">💾 Enregistrer</button>
+    <button onclick="newProject()">🆕 Nouveau</button>
+    <button class="delete-btn" onclick="deleteProject()">🗑 Supprimer</button>
   </div>
 
   <div class="section-container">
@@ -171,31 +213,27 @@
   </div>
 
   <script>
-    let counters = {
-      mailles: parseInt(localStorage.getItem('mailles')) || 0,
-      tours: parseInt(localStorage.getItem('tours')) || 0
-    };
-    let elapsedSeconds = parseInt(localStorage.getItem('chrono')) || 0;
+    let counters = { mailles: 0, tours: 0 };
+    let elapsedSeconds = 0;
     let chronoInterval;
     let isRunning = false;
 
-    // Affichage initial
-    document.getElementById('mailles').textContent = counters.mailles;
-    document.getElementById('tours').textContent = counters.tours;
-    updateChronoDisplay();
-    document.getElementById('preview').src = localStorage.getItem('image') || '';
+    function updateUI() {
+      document.getElementById('mailles').textContent = counters.mailles;
+      document.getElementById('tours').textContent = counters.tours;
+      updateChronoDisplay();
+      document.getElementById('preview').src = localStorage.getItem('currentImage') || '';
+    }
 
     function updateCounter(type, value) {
       counters[type] += value;
       if (counters[type] < 0) counters[type] = 0;
       document.getElementById(type).textContent = counters[type];
-      localStorage.setItem(type, counters[type]);
     }
 
     function resetCounter(type) {
       counters[type] = 0;
       document.getElementById(type).textContent = 0;
-      localStorage.setItem(type, 0);
     }
 
     function updateChronoDisplay() {
@@ -208,7 +246,6 @@
       if (!isRunning) {
         chronoInterval = setInterval(() => {
           elapsedSeconds++;
-          localStorage.setItem('chrono', elapsedSeconds);
           updateChronoDisplay();
         }, 1000);
         isRunning = true;
@@ -225,7 +262,6 @@
       elapsedSeconds = 0;
       isRunning = false;
       updateChronoDisplay();
-      localStorage.setItem('chrono', '0');
     }
 
     function importImage(event) {
@@ -234,28 +270,117 @@
         const reader = new FileReader();
         reader.onload = e => {
           document.getElementById('preview').src = e.target.result;
-          localStorage.setItem('image', e.target.result);
+          localStorage.setItem('currentImage', e.target.result);
         };
         reader.readAsDataURL(file);
       }
     }
 
     function resetAll() {
-      if (confirm("Tout effacer ? Cela supprimera les données enregistrées.")) {
-        // Réinitialise tout
+      if (confirm("Tout effacer ?")) {
         counters = { mailles: 0, tours: 0 };
-        document.getElementById('mailles').textContent = 0;
-        document.getElementById('tours').textContent = 0;
-
-        clearInterval(chronoInterval);
         elapsedSeconds = 0;
         isRunning = false;
-        updateChronoDisplay();
-
+        clearInterval(chronoInterval);
         document.getElementById('preview').src = '';
-        localStorage.clear();
+        localStorage.removeItem('currentImage');
+        updateUI();
       }
     }
+
+    function saveProject() {
+      const nameInput = document.getElementById('project-name');
+      let name = nameInput.value.trim();
+
+      if (!name) {
+        alert("Entrez un nom de projet avant d'enregistrer.");
+        nameInput.focus();
+        return;
+      }
+
+      // Sauvegarde les données actuelles
+      const data = {
+        mailles: counters.mailles,
+        tours: counters.tours,
+        chrono: elapsedSeconds,
+        image: localStorage.getItem('currentImage') || ''
+      };
+      localStorage.setItem('project_' + name, JSON.stringify(data));
+      refreshProjectList();
+      document.getElementById('project-select').value = name;
+      alert(`Projet "${name}" enregistré.`);
+    }
+
+    function loadProject() {
+      const name = document.getElementById('project-select').value;
+      if (!name) return;
+      const data = JSON.parse(localStorage.getItem('project_' + name));
+      if (!data) {
+        alert("Projet introuvable.");
+        return;
+      }
+      counters.mailles = data.mailles;
+      counters.tours = data.tours;
+      elapsedSeconds = data.chrono;
+      localStorage.setItem('currentImage', data.image || '');
+      updateUI();
+      document.getElementById('project-name').value = name;
+    }
+
+    function onProjectSelectChange() {
+      loadProject();
+    }
+
+    function deleteProject() {
+      const name = document.getElementById('project-select').value;
+      if (!name) {
+        alert("Sélectionnez un projet à supprimer.");
+        return;
+      }
+      if (confirm(`Supprimer le projet "${name}" ?`)) {
+        localStorage.removeItem('project_' + name);
+        refreshProjectList();
+        document.getElementById('project-name').value = '';
+        document.getElementById('project-select').value = '';
+        resetAll();
+        alert("Projet supprimé.");
+      }
+    }
+
+    function newProject() {
+      // Avant tout, sauvegarder le projet actuel si un nom est renseigné
+      const nameInput = document.getElementById('project-name');
+      const currentName = nameInput.value.trim();
+
+      if (currentName) {
+        if(confirm(`Voulez-vous enregistrer le projet actuel "${currentName}" avant de créer un nouveau ?`)) {
+          saveProject();
+        }
+      }
+
+      // Reset complet
+      resetAll();
+      nameInput.value = '';
+      document.getElementById('project-select').value = '';
+    }
+
+    function refreshProjectList() {
+      const select = document.getElementById('project-select');
+      select.innerHTML = '<option value="">-- Sélectionner un projet --</option>';
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('project_')) {
+          const name = key.substring(8);
+          const option = document.createElement('option');
+          option.value = name;
+          option.textContent = name;
+          select.appendChild(option);
+        }
+      });
+    }
+
+    // Initialisation
+    refreshProjectList();
+    updateUI();
   </script>
 
 </body>
