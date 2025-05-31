@@ -2,29 +2,33 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Compteur Mailles & Tours</title>
+  <title>Compteur Mailles & Tours - Hello Kitty Style</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background-color: #ffeef8;
+      color: #d63384;
       text-align: center;
       padding: 20px;
     }
 
     h1 {
-      margin-bottom: 20px;
+      color: #e60073;
     }
 
     .section {
-      background: white;
+      background: #fff;
+      border: 3px solid #f8a5c2;
+      border-radius: 20px;
       padding: 20px;
       margin: 20px auto;
       max-width: 400px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 15px rgba(255, 192, 203, 0.4);
     }
 
     .counter {
+      font-size: 32px;
+      font-weight: bold;
       margin-bottom: 10px;
     }
 
@@ -33,28 +37,38 @@
       padding: 10px 15px;
       font-size: 16px;
       border: none;
-      border-radius: 5px;
+      border-radius: 10px;
+      background-color: #ffb6c1;
+      color: white;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
 
     button:hover {
-      opacity: 0.9;
+      background-color: #ff69b4;
+    }
+
+    #chrono {
+      font-size: 28px;
+      margin: 10px 0;
+      color: #c2185b;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
     }
 
     .imported-image {
       max-width: 100%;
       margin-top: 10px;
-    }
-
-    #chrono {
-      font-size: 24px;
-      margin: 10px 0;
+      border-radius: 10px;
+      border: 2px solid #f8a5c2;
     }
   </style>
 </head>
 <body>
 
-  <h1>Compteur Mailles & Tours</h1>
+  <h1>🎀 Compteur Mailles & Tours 🎀</h1>
 
   <div class="section">
     <h2>Mailles</h2>
@@ -75,6 +89,8 @@
   <div class="section">
     <h2>Chronomètre</h2>
     <div id="chrono">00:00</div>
+    <button onclick="startChrono()">Démarrer</button>
+    <button onclick="pauseChrono()">Pause</button>
     <button onclick="resetChrono()">Réinitialiser</button>
   </div>
 
@@ -98,20 +114,39 @@
       document.getElementById(type).textContent = 0;
     }
 
-    // Chronomètre
-    let startTime = Date.now();
-    setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
-      const seconds = String(elapsed % 60).padStart(2, '0');
-      document.getElementById('chrono').textContent = `${minutes}:${seconds}`;
-    }, 1000);
+    // Chronomètre contrôlable
+    let chronoInterval;
+    let elapsedSeconds = 0;
+    let isRunning = false;
 
-    function resetChrono() {
-      startTime = Date.now();
+    function updateChronoDisplay() {
+      const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+      const seconds = String(elapsedSeconds % 60).padStart(2, '0');
+      document.getElementById('chrono').textContent = `${minutes}:${seconds}`;
     }
 
-    // Importer une image
+    function startChrono() {
+      if (!isRunning) {
+        chronoInterval = setInterval(() => {
+          elapsedSeconds++;
+          updateChronoDisplay();
+        }, 1000);
+        isRunning = true;
+      }
+    }
+
+    function pauseChrono() {
+      clearInterval(chronoInterval);
+      isRunning = false;
+    }
+
+    function resetChrono() {
+      clearInterval(chronoInterval);
+      elapsedSeconds = 0;
+      isRunning = false;
+      updateChronoDisplay();
+    }
+
     function importImage(event) {
       const file = event.target.files[0];
       if (file) {
