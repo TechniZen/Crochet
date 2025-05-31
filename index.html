@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Compteur Mailles & Tours</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 400px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .counter {
+      margin-bottom: 10px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .imported-image {
+      max-width: 100%;
+      margin-top: 10px;
+    }
+
+    #chrono {
+      font-size: 24px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Compteur Mailles & Tours</h1>
+
+  <div class="section">
+    <h2>Mailles</h2>
+    <div class="counter" id="mailles">0</div>
+    <button onclick="updateCounter('mailles', 1)">+1</button>
+    <button onclick="updateCounter('mailles', -1)">-1</button>
+    <button onclick="resetCounter('mailles')">Réinitialiser</button>
+  </div>
+
+  <div class="section">
+    <h2>Tours</h2>
+    <div class="counter" id="tours">0</div>
+    <button onclick="updateCounter('tours', 1)">+1</button>
+    <button onclick="updateCounter('tours', -1)">-1</button>
+    <button onclick="resetCounter('tours')">Réinitialiser</button>
+  </div>
+
+  <div class="section">
+    <h2>Chronomètre</h2>
+    <div id="chrono">00:00</div>
+    <button onclick="resetChrono()">Réinitialiser</button>
+  </div>
+
+  <div class="section">
+    <h2>Importer une image</h2>
+    <input type="file" accept="image/*" onchange="importImage(event)">
+    <img id="preview" class="imported-image" src="" alt="">
+  </div>
+
+  <script>
+    let counters = { mailles: 0, tours: 0 };
+
+    function updateCounter(type, value) {
+      counters[type] += value;
+      if (counters[type] < 0) counters[type] = 0;
+      document.getElementById(type).textContent = counters[type];
+    }
+
+    function resetCounter(type) {
+      counters[type] = 0;
+      document.getElementById(type).textContent = 0;
+    }
+
+    // Chronomètre
+    let startTime = Date.now();
+    setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const seconds = String(elapsed % 60).padStart(2, '0');
+      document.getElementById('chrono').textContent = `${minutes}:${seconds}`;
+    }, 1000);
+
+    function resetChrono() {
+      startTime = Date.now();
+    }
+
+    // Importer une image
+    function importImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('preview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
+
+</body>
+</html>
