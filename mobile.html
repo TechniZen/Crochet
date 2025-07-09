@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Compteur Crochet</title>
+<style>
+  body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background-color: #ffeef8;
+    color: #d63384;
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h1 {
+    color: #e60073;
+    margin: 10px 0 5px;
+    text-align: center;
+  }
+
+  .texte-arc-en-ciel {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: linear-gradient(270deg, #ff0000, #ff7300, #ffeb00, #47ff00, #00ffee, #2b65ff, #8000ff, #ff0000);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: defilementCouleur 5s linear infinite;
+    margin-bottom: 10px;
+  }
+
+  @keyframes defilementCouleur {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
+  .controls {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .controls select,
+  .controls input,
+  .controls button {
+    flex: 1 1 40%;
+    min-width: 120px;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 2px solid #f8a5c2;
+    background-color: #fff0f5;
+    color: #c2185b;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    transition: all 0.2s;
+  }
+
+  .controls button {
+    background-color: #ffb6c1;
+    color: white;
+    border: none;
+  }
+
+  .controls button:hover {
+    background-color: #ff69b4;
+  }
+
+  .delete-btn {
+    background-color: #ff4d6d !important;
+  }
+
+  .delete-btn:hover {
+    background-color: #e60033 !important;
+  }
+
+  .section-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    flex-grow: 1;
+  }
+
+  .section {
+    background: #fff;
+    border: 3px solid #f8a5c2;
+    border-radius: 20px;
+    padding: 15px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 0 15px rgba(255, 192, 203, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .counter {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+
+  button {
+    margin: 5px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    background-color: #ffb6c1;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  button:hover {
+    background-color: #ff69b4;
+  }
+
+  #chrono {
+    font-size: 1.5rem;
+    margin: 10px 0;
+    color: #c2185b;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .custom-file-upload {
+    display: inline-block;
+    padding: 10px 18px;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: #ffb6c1;
+    color: white;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+  }
+
+  .custom-file-upload:hover {
+    background-color: #ff69b4;
+  }
+
+  .imported-image {
+    max-width: 100%;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 2px solid #f8a5c2;
+  }
+
+  .image-section-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .footer-button {
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  @media (min-height: 700px) {
+    body {
+      justify-content: flex-start;
+    }
+    .section-container {
+      flex-grow: 1;
+      justify-content: space-between;
+    }
+  }
+</style>
+
+</head>
+<body>
+
+  <h1>🎀 Compteur Crochet 🎀</h1>
+  <div class="texte-arc-en-ciel"><h3>de Marjijou <3</h3></div>
+
+  <div class="controls">
+    <select id="project-select" onchange="loadProject()">
+      <option value="">-- Sélectionner un projet --</option>
+    </select>
+    <input type="text" id="project-name" placeholder="Nom du projet" />
+    <button onclick="saveProject()">💾 Enregistrer</button>
+    <button onclick="newProject()">🆕 Nouveau</button>
+    <button class="delete-btn" onclick="deleteProject()">🗑 Supprimer</button>
+    <!-- Boutons dans ton HTML -->
+    <button id="btn-export">⬇ Exporter</button>
+    <button><label for="import-file" style="cursor: pointer;">⬆ Importer</label></button>
+    <input type="file" id="import-file" accept=".json" style="display: none;" />
+
+  </div>
+
+  <div class="section-container">
+    <div class="section">
+      <h2>Mailles</h2>
+      <div class="counter" id="mailles">0</div>
+      <button onclick="updateCounter('mailles', 1)">+1</button>
+      <button onclick="updateCounter('mailles', -1)">-1</button>
+      <button onclick="resetCounter('mailles')">Réinitialiser</button>
+    </div>
+
+    <div class="section">
+      <h2>Tours</h2>
+      <div class="counter" id="tours">0</div>
+      <button onclick="updateCounter('tours', 1)">+1</button>
+      <button onclick="updateCounter('tours', -1)">-1</button>
+      <button onclick="resetCounter('tours')">Réinitialiser</button>
+    </div>
+
+    <div class="section">
+      <h2>Chronomètre</h2>
+      <div id="chrono">00:00</div>
+      <button onclick="startChrono()">Démarrer</button>
+      <button onclick="pauseChrono()">Pause</button>
+      <button onclick="resetChrono()">Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="image-section-wrapper">
+    <div class="section">
+      <h2>Importer une image</h2>
+      <label for="file-upload" class="custom-file-upload">📸 Choisir une image</label>
+      <input id="file-upload" type="file" accept="image/*" onchange="importImage(event)">
+      <img id="preview" class="imported-image" src="" alt="">
+    </div>
+  </div>
+
+  <div class="footer-button">
+    <button onclick="resetAll()" style="background-color:#f8a5c2;">🧹 Effacer tout</button>
+  </div>
+
+<script>
+  const STORAGE_PREFIX = 'project_';
+  let counters = { mailles: 0, tours: 0 };
+  let elapsedSeconds = 0;
+  let chronoInterval;
+  let isRunning = false;
+
+  function updateUI() {
+    document.getElementById('mailles').textContent = counters.mailles;
+    document.getElementById('tours').textContent = counters.tours;
+    updateChronoDisplay();
+    document.getElementById('preview').src = localStorage.getItem('currentImage') || '';
+  }
+
+  function updateCounter(type, value) {
+    counters[type] += value;
+    if (counters[type] < 0) counters[type] = 0;
+    document.getElementById(type).textContent = counters[type];
+  }
+
+  function resetCounter(type) {
+    counters[type] = 0;
+    document.getElementById(type).textContent = 0;
+  }
+
+  function updateChronoDisplay() {
+    const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+    const seconds = String(elapsedSeconds % 60).padStart(2, '0');
+    document.getElementById('chrono').textContent = `${minutes}:${seconds}`;
+  }
+
+  function startChrono() {
+    if (!isRunning) {
+      chronoInterval = setInterval(() => {
+        elapsedSeconds++;
+        updateChronoDisplay();
+      }, 1000);
+      isRunning = true;
+    }
+  }
+
+  function pauseChrono() {
+    clearInterval(chronoInterval);
+    isRunning = false;
+  }
+
+  function resetChrono() {
+    clearInterval(chronoInterval);
+    elapsedSeconds = 0;
+    isRunning = false;
+    updateChronoDisplay();
+  }
+
+  function importImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('preview').src = e.target.result;
+        localStorage.setItem('currentImage', e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function resetAll() {
+    if (confirm("Tout effacer ?")) {
+      counters = { mailles: 0, tours: 0 };
+      elapsedSeconds = 0;
+      isRunning = false;
+      clearInterval(chronoInterval);
+      document.getElementById('preview').src = '';
+      localStorage.removeItem('currentImage');
+      updateUI();
+    }
+  }
+
+  function saveProject() {
+    const nameInput = document.getElementById('project-name');
+    let name = nameInput.value.trim();
+    if (!name) {
+      alert("Entrez un nom de projet avant d'enregistrer.");
+      nameInput.focus();
+      return;
+    }
+
+    const data = {
+      mailles: counters.mailles,
+      tours: counters.tours,
+      chrono: elapsedSeconds,
+      image: localStorage.getItem('currentImage') || ''
+    };
+    localStorage.setItem(STORAGE_PREFIX + name, JSON.stringify(data));
+    refreshProjectList();
+    document.getElementById('project-select').value = name;
+    alert(`Projet "${name}" enregistré.`);
+  }
+
+  function loadProject() {
+    const name = document.getElementById('project-select').value;
+    if (!name) return;
+
+    const data = JSON.parse(localStorage.getItem(STORAGE_PREFIX + name));
+    if (!data) {
+      alert("Projet introuvable.");
+      return;
+    }
+
+    counters.mailles = data.mailles;
+    counters.tours = data.tours;
+    elapsedSeconds = data.chrono || 0;
+    localStorage.setItem('currentImage', data.image || '');
+    updateUI();
+    document.getElementById('project-name').value = name;
+  }
+
+  function deleteProject() {
+    const name = document.getElementById('project-select').value;
+    if (!name) {
+      alert("Sélectionnez un projet à supprimer.");
+      return;
+    }
+
+    if (confirm(`Supprimer le projet "${name}" ?`)) {
+      localStorage.removeItem(STORAGE_PREFIX + name);
+      refreshProjectList();
+      document.getElementById('project-name').value = '';
+      document.getElementById('project-select').value = '';
+      resetAll();
+      alert("Projet supprimé.");
+    }
+  }
+
+  function newProject() {
+    const nameInput = document.getElementById('project-name');
+    const currentName = nameInput.value.trim();
+
+    if (currentName) {
+      if (confirm(`Voulez-vous enregistrer le projet actuel "${currentName}" avant de créer un nouveau ?`)) {
+        saveProject();
+      }
+    }
+
+    resetAll();
+    nameInput.value = '';
+    document.getElementById('project-select').value = '';
+  }
+
+  function refreshProjectList() {
+    const select = document.getElementById('project-select');
+    select.innerHTML = '<option value="">-- Sélectionner un projet --</option>';
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith(STORAGE_PREFIX)) {
+        const name = key.substring(STORAGE_PREFIX.length);
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      }
+    });
+  }
+
+  function getCurrentProjectName() {
+    return document.getElementById('project-select').value;
+  }
+
+  // Exporter
+  document.getElementById('btn-export').addEventListener('click', () => {
+    const name = getCurrentProjectName();
+    if (!name) return alert("Aucun projet sélectionné à exporter.");
+
+    const data = localStorage.getItem(STORAGE_PREFIX + name);
+    if (!data) return alert("Projet introuvable dans le stockage.");
+
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Importer
+  document.getElementById('import-file').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (
+          typeof data.mailles !== 'number' ||
+          typeof data.tours !== 'number' ||
+          typeof data.chrono !== 'number'
+        ) {
+          alert("Fichier JSON invalide.");
+          return;
+        }
+
+        let baseName = file.name.replace(/\.json$/, '');
+        let name = baseName;
+        let idx = 1;
+
+        while (localStorage.getItem(STORAGE_PREFIX + name)) {
+          name = baseName + '_' + idx++;
+        }
+
+        localStorage.setItem(STORAGE_PREFIX + name, JSON.stringify(data));
+        alert(`Projet importé sous le nom "${name}".`);
+        refreshProjectList();
+
+        // Charger automatiquement le projet importé
+        document.getElementById('project-select').value = name;
+        document.getElementById('project-name').value = name;
+        loadProject();
+      } catch (error) {
+        alert("Erreur de lecture du fichier JSON.");
+      }
+    };
+
+    reader.readAsText(file);
+  });
+
+  // Initialisation
+  refreshProjectList();
+  updateUI();
+</script>
+
+
+</body>
+</html>
